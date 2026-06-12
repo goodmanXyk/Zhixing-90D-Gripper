@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>夹爪控制面板</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        button {
+            width: 150px;
+            height: 50px;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        #log {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #333;
+        }
+        #grasp_status {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h2>夹爪控制面板</h2>
+
+<button onclick="sendAction('/gripper/init')">初始化</button>
+<button onclick="sendAction('/gripper/open')">打开</button>
+<button onclick="sendAction('/gripper/close')">关闭</button>
+<button onclick="sendAction('/gripper/grasp')">夹取</button>
+
+<div id="log"></div>
+<div id="grasp_status"></div>
+
+<script>
+function sendAction(url) {
+    const logEl = document.getElementById('log');
+    const statusEl = document.getElementById('grasp_status');
+
+    logEl.innerText = `正在执行动作...`;
+
+    fetch(url, { method: 'POST' })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            logEl.innerText = `动作执行成功: ${data.message}`;
+
+            // 只有夹取动作显示夹持状态
+            if(url === '/gripper/grasp') {
+                let grasp = false;
+                statusEl.style.color = '#d9534f'; // 红色表示未夹持
+                statusEl.innerText = `夹取状态: ${grasp}`;
+                const interval = setInterval(() => {
+                    grasp = true; // 模拟夹持成功
+                    statusEl.style.color = '#5cb85c'; // 绿色表示已夹持
+                    statusEl.innerText = `夹取状态: ${grasp}`;
+                    clearInterval(interval);
+                }, 500);
+            } else {
+                // 其他动作不显示夹持状态
+                statusEl.innerText = '';
+            }
+        } else {
+            logEl.innerText = `动作执行失败: ${data.message}`;
+            statusEl.innerText = '';
+        }
+    })
+    .catch(error => {
+        logEl.innerText = `请求失败: ${error}`;
+        statusEl.innerText = '';
+    });
+}
+</script>
+
+</body>
+</html>
